@@ -2,26 +2,16 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🚀 MARIOPRO 3D Viewer + AR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 MARIOPRO 3D Viewer</title>
     <style>
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             background: #1a1a1a;
             color: white;
             overflow: hidden;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            overscroll-behavior: none;
-            -webkit-overflow-scrolling: touch;
         }
 
         .container {
@@ -30,22 +20,18 @@
             position: relative;
         }
 
-        /* Three.js Canvas */
         #canvas {
             width: 100%;
             height: 100%;
             display: block;
             background: #222;
-            touch-action: none;
         }
 
-        /* AR Viewer */
         #arViewer {
             width: 100%;
             height: 100%;
             display: none;
             background: #f5f5f5;
-            touch-action: none;
         }
 
         .ui {
@@ -58,274 +44,130 @@
             z-index: 1000;
         }
 
-        /* Header compatto mobile */
         .header {
             position: fixed;
             top: 10px;
             left: 10px;
             right: 10px;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0, 0, 0, 0.9);
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 10px;
             pointer-events: auto;
-            backdrop-filter: blur(15px);
-            border: 2px solid #667eea;
             text-align: center;
-            max-height: 80px;
-            overflow: hidden;
+            border: 2px solid #667eea;
         }
 
         .header h1 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 2px;
+            font-size: 1.3rem;
+            color: #667eea;
+            margin-bottom: 5px;
         }
 
         .header p {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             color: #ccc;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
-        /* Controlli mobile ottimizzati */
         .controls {
             position: fixed;
             bottom: 10px;
             left: 10px;
             right: 10px;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0, 0, 0, 0.9);
             padding: 15px;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            border-radius: 10px;
             pointer-events: auto;
-            backdrop-filter: blur(15px);
             border: 2px solid #667eea;
-            max-height: 200px;
-            overflow-y: auto;
         }
 
-        /* Pulsanti ottimizzati per touch */
         .btn {
             background: linear-gradient(45deg, #667eea, #764ba2);
             border: none;
             color: white;
-            padding: 18px 20px;
-            border-radius: 12px;
+            padding: 15px 20px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 16px;
             font-weight: 600;
-            transition: all 0.2s ease;
             width: 100%;
-            min-height: 50px;
+            margin: 5px 0;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: manipulation;
         }
 
         .btn:active {
             transform: scale(0.98);
-            background: linear-gradient(45deg, #5a6fd8, #6a4190);
         }
 
         .btn.secondary {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-        }
-
-        .btn.secondary:active {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.2);
+            display: none;
         }
 
         .btn.ar {
             background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-            animation: pulse 2s infinite;
-            font-weight: bold;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            transform: none !important;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); }
-            70% { box-shadow: 0 0 0 6px rgba(255, 107, 107, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); }
-        }
-
-        /* Selettore modalità mobile */
-        .mode-selector {
-            position: fixed;
-            top: 100px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.95);
-            padding: 10px;
-            border-radius: 12px;
-            pointer-events: auto;
-            backdrop-filter: blur(15px);
-            border: 2px solid #667eea;
             display: none;
-            min-width: 140px;
         }
 
-        .mode-selector.visible {
-            display: block;
-        }
-
-        .mode-btn {
-            display: block;
-            width: 100%;
-            margin: 4px 0;
-            padding: 12px 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 14px;
-            text-align: center;
-        }
-
-        .mode-btn:active {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .mode-btn.active {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border-color: transparent;
-        }
-
-        /* Area upload mobile */
-        .file-input-area {
+        .upload-area {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: calc(100vw - 20px);
-            max-width: 400px;
-            background: rgba(0, 0, 0, 0.98);
-            padding: 30px 20px;
-            border-radius: 20px;
-            border: 3px dashed #667eea;
-            backdrop-filter: blur(20px);
-            pointer-events: auto;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 30px;
+            border-radius: 15px;
             text-align: center;
-            max-height: 80vh;
-            overflow-y: auto;
+            border: 3px dashed #667eea;
+            max-width: 90vw;
+            pointer-events: auto;
         }
 
-        .file-input-area.hidden {
-            display: none !important;
+        .upload-area.hidden {
+            display: none;
         }
 
-        .file-input-area.dragover {
-            border-color: #764ba2;
-            background: rgba(102, 126, 234, 0.2);
-            transform: translate(-50%, -50%) scale(1.02);
-        }
-
-        /* Input file mobile ottimizzato */
         #fileInput {
             width: 100%;
-            padding: 20px;
+            padding: 15px;
             font-size: 16px;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid #667eea;
-            border-radius: 12px;
+            border-radius: 10px;
             color: white;
-            margin: 20px 0;
-            cursor: pointer;
-            min-height: 60px;
+            margin: 15px 0;
         }
 
-        #fileInput::-webkit-file-upload-button {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-right: 15px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        /* Info panel mobile */
         .info {
             position: fixed;
-            top: 100px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.95);
+            top: 90px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 10px;
             pointer-events: auto;
             display: none;
-            backdrop-filter: blur(15px);
             border: 2px solid #667eea;
-            max-width: calc(50vw - 15px);
             font-size: 14px;
         }
 
-        .info h3 {
-            font-size: 16px;
-            margin-bottom: 10px;
-            color: #667eea;
-        }
-
-        .info div {
-            margin-bottom: 6px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-        }
-
-        /* Device info mobile */
-        .device-info {
-            position: fixed;
-            bottom: 220px;
-            left: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px 15px;
-            border-radius: 8px;
-            pointer-events: auto;
-            font-size: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            text-align: center;
-        }
-
-        /* Status e messaggi */
         .status {
-            margin-top: 20px;
-            text-align: center;
+            margin-top: 15px;
             font-size: 14px;
         }
 
         .error {
             color: #ff6b6b;
-            background: rgba(255, 107, 107, 0.15);
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 107, 107, 0.3);
-            font-size: 14px;
+            background: rgba(255, 107, 107, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
         }
 
         .loading {
             color: #667eea;
-            font-size: 14px;
         }
 
         .spinner {
@@ -335,7 +177,7 @@
             border-top: 3px solid #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 15px auto;
+            margin: 10px auto;
         }
 
         @keyframes spin {
@@ -343,498 +185,389 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Instructions mobile */
-        .instructions {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .instructions h3 {
-            color: #ffeb3b;
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
-
-        .instructions ul {
-            list-style-position: inside;
-            padding-left: 0;
-        }
-
-        .instructions li {
-            margin-bottom: 4px;
-        }
-
-        /* Model-viewer mobile */
-        model-viewer {
-            --poster-color: transparent;
-            --progress-bar-color: #667eea;
-        }
-
-        model-viewer::part(default-ar-button) {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a52) !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 25px !important;
-            padding: 12px 24px !important;
-            font-weight: bold !important;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3) !important;
-            animation: pulse 2s infinite !important;
-            font-size: 16px !important;
-        }
-
-        /* Landscape orientation fixes */
-        @media screen and (orientation: landscape) and (max-height: 500px) {
-            .header {
-                top: 5px;
-                padding: 10px;
-                max-height: 60px;
-            }
-            
-            .header h1 {
-                font-size: 1rem;
-            }
-            
-            .header p {
-                font-size: 0.7rem;
-            }
-            
-            .controls {
-                bottom: 5px;
-                padding: 10px;
-                max-height: 120px;
-            }
-            
-            .btn {
-                padding: 12px 15px;
-                min-height: 40px;
-                font-size: 14px;
-            }
-            
-            .device-info {
-                bottom: 130px;
-                font-size: 10px;
-            }
-        }
-
-        /* Safe area per iPhone con notch */
-        @supports (padding: max(0px)) {
-            .header {
-                top: max(10px, env(safe-area-inset-top));
-                left: max(10px, env(safe-area-inset-left));
-                right: max(10px, env(safe-area-inset-right));
-            }
-            
-            .controls {
-                bottom: max(10px, env(safe-area-inset-bottom));
-                left: max(10px, env(safe-area-inset-left));
-                right: max(10px, env(safe-area-inset-right));
-            }
-        }
-
-        /* Loading overlay mobile */
-        .loading-overlay {
+        .device-info {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            backdrop-filter: blur(10px);
-        }
-
-        .loading-overlay.hidden {
-            display: none;
-        }
-
-        /* Gesture hints */
-        .gesture-hint {
-            position: fixed;
-            bottom: 50%;
-            left: 50%;
-            transform: translate(-50%, 50%);
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
+            bottom: 150px;
+            left: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
             text-align: center;
-            pointer-events: none;
-            opacity: 0;
-            animation: fadeInOut 3s ease-in-out;
+            font-size: 12px;
+            pointer-events: auto;
         }
 
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
+        /* Model-viewer basic styling */
+        model-viewer::part(default-ar-button) {
+            background: #ff6b6b !important;
+            color: white !important;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Three.js Canvas -->
         <canvas id="canvas"></canvas>
         
-        <!-- AR Viewer -->
         <model-viewer
             id="arViewer"
-            alt="Modello 3D MARIOPRO"
             ar
             ar-modes="webxr scene-viewer quick-look"
             camera-controls
-            touch-action="pan-y"
-            auto-rotate
-            auto-rotate-delay="4000"
-            shadow-intensity="1"
-            camera-orbit="45deg 75deg auto"
-            min-camera-orbit="auto auto 2m"
-            max-camera-orbit="auto auto 16m">
+            touch-action="pan-y">
         </model-viewer>
         
-        <!-- Loading Overlay -->
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="spinner"></div>
-            <p>Inizializzazione MARIOPRO...</p>
-        </div>
-        
         <div class="ui">
-            <!-- Header compatto -->
             <div class="header">
-                <h1 id="title">🚀 MARIOPRO AR</h1>
-                <p id="subtitle">3D Viewer + Realtà Aumentata</p>
+                <h1 id="title">🚀 MARIOPRO 3D Viewer</h1>
+                <p id="subtitle">Loading...</p>
             </div>
 
-            <!-- Mode selector -->
-            <div class="mode-selector" id="modeSelector">
-                <button class="mode-btn active" id="threejsMode">🎮 3D</button>
-                <button class="mode-btn" id="arMode">📱 AR</button>
-            </div>
-
-            <!-- Info panel compatta -->
             <div class="info" id="info">
-                <h3>📊 Info</h3>
-                <div>
-                    <span>Triangoli:</span>
-                    <span id="triangles">-</span>
-                </div>
-                <div>
-                    <span>Vertici:</span>
-                    <span id="vertices">-</span>
-                </div>
-                <div>
-                    <span>AR:</span>
-                    <span id="arReady">-</span>
-                </div>
+                <div>Triangoli: <span id="triangles">-</span></div>
+                <div>Vertici: <span id="vertices">-</span></div>
+                <div>AR: <span id="arStatus">-</span></div>
             </div>
 
-            <!-- Controlli ottimizzati mobile -->
             <div class="controls">
-                <button class="btn" id="loadFileBtn">📂 Carica File 3D</button>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn secondary" id="resetBtn" style="display:none; flex: 1;">🔄 Reset</button>
-                    <button class="btn secondary" id="wireframeBtn" style="display:none; flex: 1;">🔲 Wire</button>
-                </div>
-                <button class="btn ar" id="arToggleBtn" style="display:none;">📱 Modalità AR</button>
+                <button class="btn" id="loadBtn">📂 Carica File 3D</button>
+                <button class="btn secondary" id="resetBtn">🔄 Reset Camera</button>
+                <button class="btn secondary" id="wireBtn">🔲 Wireframe</button>
+                <button class="btn ar" id="arBtn">📱 Modalità AR</button>
             </div>
 
-            <!-- Upload area -->
-            <div class="file-input-area" id="fileInputArea">
-                <div style="font-size: 2.5rem; margin-bottom: 15px;">📦</div>
-                <h2 style="color: #667eea; margin-bottom: 15px; font-size: 1.5rem;">Carica modello</h2>
-                
+            <div class="upload-area" id="uploadArea">
+                <div style="font-size: 3rem; margin-bottom: 15px;">📦</div>
+                <h2 style="color: #667eea; margin-bottom: 15px;">Carica Modello 3D</h2>
                 <input type="file" id="fileInput" accept=".gltf,.glb,.dae">
-                
-                <div class="instructions">
-                    <h3>🔍 AR Support</h3>
-                    <ul style="text-align: left; font-size: 13px;">
-                        <li>📱 <strong>Android:</strong> File GLB/GLTF</li>
-                        <li>🍎 <strong>iOS:</strong> File GLB/USDZ</li>
-                        <li>💻 <strong>Desktop:</strong> Solo 3D</li>
-                        <li>📦 <strong>Max:</strong> 2GB</li>
-                    </ul>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <p><strong>📱 Android:</strong> AR con file GLB</p>
+                    <p><strong>🍎 iOS:</strong> AR con Safari</p>
+                    <p><strong>💻 Desktop:</strong> Solo viewer 3D</p>
                 </div>
-
                 <div class="status" id="status"></div>
             </div>
 
-            <!-- Device info -->
             <div class="device-info" id="deviceInfo">
-                <span id="deviceType">📱 Rilevamento device...</span> |
-                <span id="arSupport">🔍 Check AR...</span>
-            </div>
-
-            <!-- Gesture hint -->
-            <div class="gesture-hint" id="gestureHint" style="display: none;">
-                👆 Tocca e trascina per ruotare il modello
+                Device: <span id="deviceType">Detecting...</span> | 
+                AR: <span id="arSupport">Checking...</span>
             </div>
         </div>
     </div>
 
-    <!-- Three.js Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.140.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.140.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.140.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.140.0/examples/js/loaders/ColladaLoader.js"></script>
-
-    <!-- model-viewer for AR -->
+    <!-- Three.js Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r140/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r140/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r140/loaders/GLTFLoader.js"></script>
+    
+    <!-- Model-viewer for AR -->
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
     <script>
-        console.log('📱 MARIOPRO Mobile AR - Inizializzazione');
+        console.log('🚀 MARIOPRO Simple - Start');
 
-        // Variabili globali
+        // Global variables
         let scene, camera, renderer, controls, model;
+        let currentMode = '3d'; // '3d' or 'ar'
         let wireframeMode = false;
-        let currentMode = 'threejs';
-        let currentFileBlob = null;
-        let currentFileName = '';
-        let currentFileExtension = '';
-        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-        // Elementi DOM
+        // DOM elements
         const canvas = document.getElementById('canvas');
         const arViewer = document.getElementById('arViewer');
         const fileInput = document.getElementById('fileInput');
-        const fileInputArea = document.getElementById('fileInputArea');
+        const uploadArea = document.getElementById('uploadArea');
         const status = document.getElementById('status');
         const info = document.getElementById('info');
-        const modeSelector = document.getElementById('modeSelector');
-        const loadingOverlay = document.getElementById('loadingOverlay');
 
-        // Nascondi loading dopo inizializzazione
-        setTimeout(() => {
-            loadingOverlay.classList.add('hidden');
-        }, 2000);
-
-        // Device detection ottimizzato mobile
+        // Simple device detection
         function detectDevice() {
-            const isAndroid = /Android/i.test(navigator.userAgent);
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            const isChrome = /Chrome/i.test(navigator.userAgent);
-            const isSafari = /Safari/i.test(navigator.userAgent) && !isChrome;
+            const ua = navigator.userAgent;
+            const isAndroid = /Android/i.test(ua);
+            const isIOS = /iPhone|iPad/i.test(ua);
+            const isChrome = /Chrome/i.test(ua);
+            const isSafari = /Safari/i.test(ua) && !isChrome;
 
             let deviceType = 'Desktop';
             let arSupported = false;
 
             if (isAndroid && isChrome) {
-                deviceType = 'Android Chrome';
+                deviceType = 'Android';
                 arSupported = true;
             } else if (isIOS && isSafari) {
-                deviceType = 'iOS Safari';
-                arSupported = true;
-            } else if (isAndroid) {
-                deviceType = 'Android';
-            } else if (isIOS) {
                 deviceType = 'iOS';
+                arSupported = true;
             }
 
-            // Aggiorna UI
             document.getElementById('deviceType').textContent = deviceType;
-            document.getElementById('arSupport').textContent = arSupported ? 'Supportato ✅' : 'Non supportato';
+            document.getElementById('arSupport').textContent = arSupported ? 'Yes' : 'No';
 
-            console.log('📱 Device:', deviceType, '| AR:', arSupported);
-            return { isAndroid, isIOS, isChrome, isSafari, arSupported };
+            return { deviceType, arSupported };
         }
 
-        // Three.js inizializzazione mobile-ottimizzata
+        // Simple Three.js setup
         function initThree() {
-            console.log('🎮 Init Three.js mobile...');
+            console.log('Init Three.js...');
 
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a1a);
+            try {
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x1a1a1a);
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(4, 4, 4);
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.set(4, 4, 4);
 
-            renderer = new THREE.WebGLRenderer({ 
-                canvas, 
-                antialias: !isMobile, // No antialias su mobile per performance
-                powerPreference: isMobile ? 'low-power' : 'high-performance'
-            });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 2 : 3));
-            renderer.shadowMap.enabled = !isMobile; // No shadows su mobile per performance
+                renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
+                renderer.setSize(window.innerWidth, window.innerHeight);
 
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.1; // Più responsivo su mobile
-            controls.touches = {
-                ONE: THREE.TOUCH.ROTATE,
-                TWO: THREE.TOUCH.DOLLY_PAN
-            };
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.1;
 
-            setupLighting();
-            console.log('✅ Three.js mobile ready');
-        }
+                // Simple lighting
+                scene.add(new THREE.AmbientLight(0x404040, 0.6));
+                const light = new THREE.DirectionalLight(0xffffff, 0.8);
+                light.position.set(5, 10, 5);
+                scene.add(light);
 
-        function setupLighting() {
-            // Illuminazione semplificata per mobile
-            scene.add(new THREE.AmbientLight(0x404040, 0.6));
-            
-            const light1 = new THREE.DirectionalLight(0xffffff, 0.8);
-            light1.position.set(10, 10, 5);
-            if (!isMobile) light1.castShadow = true;
-            scene.add(light1);
-
-            if (!isMobile) {
-                const light2 = new THREE.DirectionalLight(0xffffff, 0.3);
-                light2.position.set(-10, -10, -5);
-                scene.add(light2);
+                console.log('✅ Three.js ready');
+                return true;
+            } catch (error) {
+                console.error('❌ Three.js error:', error);
+                return false;
             }
         }
 
-        // Eventi ottimizzati mobile
-        function setupEvents() {
-            console.log('🔧 Setup eventi mobile...');
-
-            // Previeni comportamenti default mobile
-            document.addEventListener('touchmove', (e) => {
-                if (e.touches.length > 1) e.preventDefault();
-            }, { passive: false });
-
-            // File input
-            fileInput.addEventListener('change', handleFileSelect);
-
-            // Controlli
-            document.getElementById('resetBtn').addEventListener('click', resetCamera);
-            document.getElementById('wireframeBtn').addEventListener('click', toggleWireframe);
-            document.getElementById('arToggleBtn').addEventListener('click', toggleMode);
-
-            // Mode selector
-            document.getElementById('threejsMode').addEventListener('click', () => switchMode('threejs'));
-            document.getElementById('arMode').addEventListener('click', () => switchMode('ar'));
-
-            // Touch ottimizzato drag & drop
-            setupDragAndDrop();
-            window.addEventListener('resize', onWindowResize);
-            window.addEventListener('orientationchange', () => {
-                setTimeout(onWindowResize, 100);
-            });
-
-            console.log('✅ Eventi mobile configurati');
-        }
-
-        function handleFileSelect(event) {
-            const files = event.target.files;
-            if (files.length > 0) {
-                loadModel(files[0]);
-                // Reset file input per consentire ricaricamento stesso file
-                setTimeout(() => { fileInput.value = ''; }, 1000);
-            }
-        }
-
-        function setupDragAndDrop() {
-            if (!isMobile) {
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    document.addEventListener(eventName, preventDefaults, false);
-                });
-
-                document.addEventListener('drop', (event) => {
-                    const files = event.dataTransfer.files;
-                    if (files.length > 0) {
-                        loadModel(files[0]);
-                    }
-                }, false);
-            }
-        }
-
-        function preventDefaults(event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-
-        // Caricamento ottimizzato mobile
+        // Simple file loading
         function loadModel(file) {
-            console.log('📂 Caricamento mobile:', file.name);
+            console.log('Loading:', file.name);
 
-            // Validazione
-            const validExtensions = ['gltf', 'glb', 'dae'];
-            currentFileExtension = file.name.split('.').pop().toLowerCase();
-            
-            if (!validExtensions.includes(currentFileExtension)) {
-                showError(`Formato .${currentFileExtension} non supportato`);
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (!['gltf', 'glb'].includes(ext)) {
+                showError('Solo file GLB/GLTF supportati in questa versione');
                 return;
             }
 
-            // Limite ridotto per mobile se necessario
-            const maxSize = isMobile ? 100 * 1024 * 1024 : 2 * 1024 * 1024 * 1024; // 100MB mobile, 2GB desktop
-            if (file.size > maxSize) {
-                showError(`File troppo grande. Max ${formatFileSize(maxSize)}`);
+            if (file.size > 100 * 1024 * 1024) {
+                showError('File troppo grande (max 100MB)');
                 return;
             }
 
-            currentFileName = file.name;
-            showLoading(`Caricando ${file.name}...`);
+            showLoading('Caricando ' + file.name + '...');
 
-            // Leggi file
             const reader = new FileReader();
-            reader.onload = function(event) {
-                currentFileBlob = new Blob([event.target.result]);
-                const url = URL.createObjectURL(currentFileBlob);
-                
-                loadInThreeJS(url, file.name);
-                setupARViewer(url, file.name);
+            reader.onload = (e) => {
+                const url = URL.createObjectURL(new Blob([e.target.result]));
+                load3D(url, file.name);
             };
             reader.readAsArrayBuffer(file);
         }
 
-        function loadInThreeJS(url, filename) {
-            let loader;
-            switch(currentFileExtension) {
-                case 'gltf':
-                case 'glb':
-                    loader = new THREE.GLTFLoader();
-                    break;
-                case 'dae':
-                    loader = new THREE.ColladaLoader();
-                    break;
-            }
+        function load3D(url, filename) {
+            const loader = new THREE.GLTFLoader();
             
-            loader.load(url, (result) => {
+            loader.load(url, (gltf) => {
+                console.log('✅ Model loaded');
+
                 if (model) {
                     scene.remove(model);
                 }
 
-                model = currentFileExtension === 'dae' ? result.scene : result.scene;
-                setupThreeJSModel();
+                model = gltf.scene;
+
+                // Center and scale
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+
+                model.position.sub(center);
+                const maxDim = Math.max(size.x, size.y, size.z);
+                if (maxDim > 0) {
+                    model.scale.setScalar(3 / maxDim);
+                }
+
+                scene.add(model);
+
+                // Setup AR
+                arViewer.src = url;
+                arViewer.alt = filename;
+
+                // Update UI
                 updateUI(filename);
+
+                URL.revokeObjectURL(url);
+
             }, undefined, (error) => {
-                console.error('❌ Errore Three.js:', error);
+                console.error('❌ Load error:', error);
                 showError('Errore caricamento modello');
+                URL.revokeObjectURL(url);
             });
         }
 
-        function setupARViewer(url, filename) {
-            if (currentFileExtension === 'glb' || currentFileExtension === 'gltf') {
-                arViewer.src = url;
-                arViewer.setAttribute('ios-src', url);
-                arViewer.alt = `${filename} - MARIOPRO AR`;
-                console.log('✅ AR configurato');
+        function updateUI(filename) {
+            document.getElementById('title').textContent = 'MARIOPRO';
+            document.getElementById('subtitle').textContent = filename;
+
+            uploadArea.classList.add('hidden');
+            
+            document.getElementById('resetBtn').style.display = 'block';
+            document.getElementById('wireBtn').style.display = 'block';
+            
+            const deviceInfo = detectDevice();
+            if (deviceInfo.arSupported) {
+                document.getElementById('arBtn').style.display = 'block';
+            }
+            
+            info.style.display = 'block';
+            document.getElementById('arStatus').textContent = deviceInfo.arSupported ? 'Ready' : 'No';
+            
+            status.innerHTML = '';
+            resetCamera();
+        }
+
+        function resetCamera() {
+            if (model && camera && controls) {
+                const box = new THREE.Box3().setFromObject(model);
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                
+                const distance = maxDim * 3;
+                camera.position.set(distance, distance, distance);
+                camera.lookAt(0, 0, 0);
+                controls.target.set(0, 0, 0);
+                controls.update();
             }
         }
 
-        function setupThreeJSModel() {
-            // Setup ottimizzato mobile
+        function toggleWireframe() {
+            if (!model) return;
+
+            wireframeMode = !wireframeMode;
+            
             model.traverse((child) => {
-                if (child.isMesh) {
-                    if (!isMobile) {
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-                    }
-                    if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(mat => mat.needsUpdate = true);
-                        } else {
-                            child.material.needsUpdate = true;
-                        }
+                if (child.isMesh && child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(m => m.wireframe = wireframeMode);
+                    } else {
+                        child.material.wireframe = wireframeMode;
                     }
                 }
             });
 
-            centerAn
+            document.getElementById('wireBtn').textContent = 
+                wireframeMode ? '🔳 Solid' : '🔲 Wire';
+        }
+
+        function toggleAR() {
+            if (currentMode === '3d') {
+                canvas.style.display = 'none';
+                arViewer.style.display = 'block';
+                currentMode = 'ar';
+                document.getElementById('arBtn').textContent = '🎮 3D Mode';
+            } else {
+                canvas.style.display = 'block';
+                arViewer.style.display = 'none';
+                currentMode = '3d';
+                document.getElementById('arBtn').textContent = '📱 AR Mode';
+            }
+        }
+
+        function showLoading(msg) {
+            status.innerHTML = `<div class="spinner"></div><div class="loading">${msg}</div>`;
+        }
+
+        function showError(msg) {
+            status.innerHTML = `<div class="error">❌ ${msg}</div>`;
+            setTimeout(() => status.innerHTML = '', 5000);
+        }
+
+        function onWindowResize() {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls && renderer && scene && camera && currentMode === '3d') {
+                controls.update();
+                renderer.render(scene, camera);
+            }
+        }
+
+        // Setup events
+        function setupEvents() {
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) {
+                    loadModel(e.target.files[0]);
+                }
+            });
+
+            document.getElementById('loadBtn').addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            document.getElementById('resetBtn').addEventListener('click', resetCamera);
+            document.getElementById('wireBtn').addEventListener('click', toggleWireframe);
+            document.getElementById('arBtn').addEventListener('click', toggleAR);
+
+            window.addEventListener('resize', onWindowResize);
+
+            // Simple drag & drop
+            document.addEventListener('dragover', (e) => e.preventDefault());
+            document.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (e.dataTransfer.files[0]) {
+                    loadModel(e.dataTransfer.files[0]);
+                }
+            });
+        }
+
+        // Initialize
+        function init() {
+            console.log('Init app...');
+            
+            try {
+                detectDevice();
+                
+                if (typeof THREE === 'undefined') {
+                    document.getElementById('subtitle').textContent = 'Error: Three.js not loaded';
+                    return;
+                }
+
+                if (initThree()) {
+                    setupEvents();
+                    animate();
+                    document.getElementById('subtitle').textContent = 'Ready! Load a 3D file';
+                } else {
+                    document.getElementById('subtitle').textContent = 'Error initializing 3D engine';
+                }
+
+            } catch (error) {
+                console.error('Init error:', error);
+                document.getElementById('subtitle').textContent = 'Initialization failed';
+            }
+        }
+
+        // Start when DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Test function
+        window.testMARIOPRO = () => {
+            fetch('https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Box/glTF-Binary/Box.glb')
+                .then(r => r.blob())
+                .then(blob => {
+                    const file = new File([blob], 'test.glb', { type: 'model/gltf-binary' });
+                    loadModel(file);
+                });
+        };
+
+        console.log('🎮 MARIOPRO Simple Ready');
+        console.log('📋 Test with: testMARIOPRO()');
+    </script>
+</body>
+</html>
